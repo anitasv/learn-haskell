@@ -15,29 +15,31 @@ newtype Expr = Expr [Term] deriving Eq
 var :: [Char] -> Expr
 var name = Expr [Term 1 (SymList [Sym name])]
 
+-- This is used in both + and * to optimize for
+-- performance foldr + 0 can be used at *, but that
+-- will take O(n^2) time due to multiple sorting.
+--
+-- Takes sorted input, and reduces.
+reduceList :: [Term] -> [Term]
+reduceList [] = []
+reduceList ((Term 0 ls):xs) = reduceList(xs)
+reduceList [t] = [t]
+reduceList ((Term c1 l1):(Term c2 l2):xs)
+    | l1 == l2 = reduceList ((Term (c1 + c2) l1):xs)
+    | otherwise = (Term c1 l1):(reduceList ((Term c2 l2):xs))
+
 instance Num Expr where
 
     Expr e1 + Expr e2 = (Expr comb) where
-        comb = reduceList(sort (e1 ++ e2))
-        reduceList [] = []
-        reduceList ((Term 0 ls):xs) = reduceList(xs)
-        reduceList [t] = [t]
-        reduceList ((Term c1 l1):(Term c2 l2):xs)
-            | l1 == l2 = reduceList((Term (c1 + c2) l1):xs)
-            | otherwise = (Term c1 l1):reduceList((Term c2 l2):xs)
+        comb = reduceList (sort (e1 ++ e2))
 
-    -- No need to reduce here :)
-    Expr e1 * Expr e2 = expn where
-        mlist (SymList l1) (SymList l2) = 
-            SymList (sort (l1 ++ l2))
-        mult (Term c1 l1) (Term c2 l2) =
-            Term (c1 * c2) (mlist l1 l2)
+    Expr e1 * Expr e2 = (Expr expn) where
+        mlist (SymList l1) (SymList l2) = SymList (sort (l1 ++ l2))
+        mult (Term c1 l1) (Term c2 l2) = Term (c1 * c2) (mlist l1 l2)
         pair1 = [ (t1, t2) | t1 <- e1, t2 <- e2]
         multPair (x, y) = mult x y
-        pair2 = map multPair pair1
-        promote t = Expr [t]
-        prod = map promote pair2
-        expn = foldr (+) 0 prod
+        terms = map multPair pair1
+        expn = reduceList (sort terms)
 
     negate (Expr e1) = Expr (map inv e1) where 
         inv (Term c ls) = (Term (-c) ls)
