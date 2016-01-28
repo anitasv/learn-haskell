@@ -1,3 +1,8 @@
+-- This tries to prove algebraic identities. I am starting with simple
+-- multi-variable polynomials, trying to prove stuff like
+-- Degen's Formula: https://en.wikipedia.org/wiki/Degen%27s_eight-square_identity
+--
+-- Eventually I want to be able to generate rational field equations etc.
 import Data.List
 
 newtype Sym = Sym [Char] deriving (Eq,Ord)
