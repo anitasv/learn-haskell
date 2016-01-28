@@ -17,16 +17,14 @@ var name = Expr [Term 1 (SymList [Sym name])]
 
 instance Num Expr where
 
-    Expr e1 + Expr e2 = reduce(Expr comb) where
-        comb = sort (e1 ++ e2)
-        reduce :: Expr -> Expr
-        reduce (Expr t) = (Expr (reduceList t)) where
-            reduceList [] = []
-            reduceList ((Term 0 ls):xs) = reduceList(xs)
-            reduceList [t] = [t]
-            reduceList ((Term c1 l1):(Term c2 l2):xs)
-                | l1 == l2 = reduceList((Term (c1 + c2) l1):xs)
-                | otherwise = (Term c1 l1):reduceList((Term c2 l2):xs)
+    Expr e1 + Expr e2 = (Expr comb) where
+        comb = reduceList(sort (e1 ++ e2))
+        reduceList [] = []
+        reduceList ((Term 0 ls):xs) = reduceList(xs)
+        reduceList [t] = [t]
+        reduceList ((Term c1 l1):(Term c2 l2):xs)
+            | l1 == l2 = reduceList((Term (c1 + c2) l1):xs)
+            | otherwise = (Term c1 l1):reduceList((Term c2 l2):xs)
 
     -- No need to reduce here :)
     Expr e1 * Expr e2 = expn where
