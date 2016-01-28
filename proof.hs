@@ -31,14 +31,16 @@ reduceList ((Term c1 l1):(Term c2 l2):xs)
 instance Num Expr where
 
     Expr e1 + Expr e2 = (Expr comb) where
+        -- Isn't there a merge instead of sort(a++b) ?
+        -- Both e1 and e2 are sorted, but for now let
+        -- us hope some magic happens internally.
         comb = reduceList (sort (e1 ++ e2))
 
     Expr e1 * Expr e2 = (Expr expn) where
         mlist (SymList l1) (SymList l2) = SymList (sort (l1 ++ l2))
-        mult (Term c1 l1) (Term c2 l2) = Term (c1 * c2) (mlist l1 l2)
-        pair1 = [ (t1, t2) | t1 <- e1, t2 <- e2]
-        multPair (x, y) = mult x y
-        terms = map multPair pair1
+        mult ((Term c1 l1),(Term c2 l2)) = Term (c1 * c2) (mlist l1 l2)
+        pairs = [ (t1, t2) | t1 <- e1, t2 <- e2]
+        terms = map mult pairs
         expn = reduceList (sort terms)
 
     negate (Expr e1) = Expr (map inv e1) where 
@@ -189,4 +191,4 @@ testDegen = ver where
     ver = sa * sb - sc 
 
     makevar p = map var (map (p++) (map show [1..8])) 
-    sumsq x = foldr (+) 0 (map (^2) x)
+    sumsq x = foldr1 (+) (map (^2) x)
