@@ -5,15 +5,15 @@
 -- Eventually I want to be able to generate rational field equations etc.
 import Data.List
 
-newtype Sym = Sym [Char] deriving (Eq,Ord)
+type Sym = String
 newtype SymList = SymList [Sym] deriving (Eq, Ord)
 data Term = Term Integer SymList deriving Eq
 newtype Expr = Expr [Term] deriving Eq
 
 -- Bootstrap methods
 
-var :: [Char] -> Expr
-var name = Expr [Term 1 (SymList [Sym name])]
+var :: Sym -> Expr
+var name = Expr [Term 1 (SymList [name])]
 
 -- This is used in both + and * to optimize for
 -- performance foldr + 0 can be used at *, but that
@@ -22,29 +22,29 @@ var name = Expr [Term 1 (SymList [Sym name])]
 -- Takes sorted input, and reduces.
 reduceList :: [Term] -> [Term]
 reduceList [] = []
-reduceList ((Term 0 ls):xs) = reduceList(xs)
+reduceList (Term 0 ls:xs) = reduceList xs
 reduceList [t] = [t]
-reduceList ((Term c1 l1):(Term c2 l2):xs)
-    | l1 == l2 = reduceList ((Term (c1 + c2) l1):xs)
-    | otherwise = (Term c1 l1):(reduceList ((Term c2 l2):xs))
+reduceList (Term c1 l1:Term c2 l2:xs)
+    | l1 == l2 = reduceList (Term (c1 + c2) l1:xs)
+    | otherwise = Term c1 l1:reduceList (Term c2 l2:xs)
 
 instance Num Expr where
 
-    Expr e1 + Expr e2 = (Expr comb) where
+    Expr e1 + Expr e2 = Expr comb where
         -- Isn't there a merge instead of sort(a++b) ?
         -- Both e1 and e2 are sorted, but for now let
         -- us hope some magic happens internally.
         comb = reduceList (sort (e1 ++ e2))
 
-    Expr e1 * Expr e2 = (Expr expn) where
+    Expr e1 * Expr e2 = Expr expn where
         mlist (SymList l1) (SymList l2) = SymList (sort (l1 ++ l2))
-        mult ((Term c1 l1),(Term c2 l2)) = Term (c1 * c2) (mlist l1 l2)
+        mult (Term c1 l1,Term c2 l2) = Term (c1 * c2) (mlist l1 l2)
         pairs = [ (t1, t2) | t1 <- e1, t2 <- e2]
         terms = map mult pairs
         expn = reduceList (sort terms)
 
     negate (Expr e1) = Expr (map inv e1) where 
-        inv (Term c ls) = (Term (-c) ls)
+        inv (Term c ls) = Term (-c) ls
 
     fromInteger x = Expr [Term x (SymList [])]
 
@@ -65,19 +65,16 @@ folds :: ([a] -> [a] -> [a]) -> [[a]] -> [a]
 folds sep [] = []
 folds sep arr = foldr1 sep arr
 
-instance Show Sym where
-    show (Sym str) = str
-
 instance Show SymList where
     show (SymList ls) = folds mergeSym $ map show ls where 
         mergeSym x y = x ++ "." ++ y
 
 instance Show Term where
     show (Term c ls) = showTerm c $ show ls where
-        showTerm c "" = show(c)
+        showTerm c "" = show c
         showTerm 1 ls = ls
-        showTerm (-1) ls = "-" ++ ls
-        showTerm c ls = show(c) ++ "." ++ ls
+        showTerm (-1) ls = '-' : ls
+        showTerm c ls = show c ++ "." ++ ls
 
 instance Show Expr where
     show (Expr []) = "0"
@@ -87,8 +84,8 @@ instance Show Expr where
 
 -- Tests
 testShow = e where 
-    t1 = Term 1 (SymList [Sym "a"])
-    t2 = Term (-1) (SymList [Sym "b"])
+    t1 = Term 1 (SymList ["a"])
+    t2 = Term (-1) (SymList ["b"])
     e = Expr [t1, t2]
 
 testAdd = e where
@@ -133,26 +130,26 @@ testForm5 = e where
     e = (a^2 - 2*a*b + b^2) * (a^2 + 2*a*b + b^2) 
 
 testEuler = ver where
-    a1 = var "a1"; 
-    a2 = var "a2"; 
-    a3 = var "a3"; 
-    a4 = var "a4"; 
-    b1 = var "b1"; 
-    b2 = var "b2"; 
-    b3 = var "b3"; 
-    b4 = var "b4"; 
+    a1 = var "a1" 
+    a2 = var "a2" 
+    a3 = var "a3" 
+    a4 = var "a4" 
+    b1 = var "b1" 
+    b2 = var "b2" 
+    b3 = var "b3" 
+    b4 = var "b4" 
 
-    sa = a1^2 + a2^2 + a3^2 + a4^2;
-    sb = b1^2 + b2^2 + b3^2 + b4^2;
+    sa = a1^2 + a2^2 + a3^2 + a4^2
+    sb = b1^2 + b2^2 + b3^2 + b4^2
     
-    c1 = a1 * b1 + a2 * b2 + a3 * b3 + a4 * b4;
-    c2 = a1 * b2 - a2 * b1 + a3 * b4 - a4 * b3;
-    c3 = a1 * b3 - a2 * b4 - a3 * b1 + a4 * b2;
-    c4 = a1 * b4 + a2 * b3 - a3 * b2 - a4 * b1;
+    c1 = a1 * b1 + a2 * b2 + a3 * b3 + a4 * b4
+    c2 = a1 * b2 - a2 * b1 + a3 * b4 - a4 * b3
+    c3 = a1 * b3 - a2 * b4 - a3 * b1 + a4 * b2
+    c4 = a1 * b4 + a2 * b3 - a3 * b2 - a4 * b1
 
-    sc = c1^2 + c2^2 + c3^2 + c4^2;
+    sc = c1^2 + c2^2 + c3^2 + c4^2
 
-    ver = sa * sb - sc;
+    ver = sa * sb - sc
 
 testDegen = ver where
     a1 = var "a1" 
@@ -182,8 +179,8 @@ testDegen = ver where
         a1 * b7 + a2 * b8 + a3 * b5 - a4 * b6 - a5 * b3 + a6 * b4 + a7 * b1 - a8 * b2,
         a1 * b8 - a2 * b7 + a3 * b6 + a4 * b5 - a5 * b4 - a6 * b3 + a7 * b2 + a8 * b1]
   
-    al = makevar("a")
-    bl = makevar("b") 
+    al = makevar "a"
+    bl = makevar "b" 
     sa = sumsq al 
     sb = sumsq bl 
     sc = sumsq cl
@@ -191,5 +188,5 @@ testDegen = ver where
     -- Must return 0 for verification success
     ver = sa * sb - sc 
 
-    makevar p = map var $ map (p++) $ map show [1..8]
-    sumsq x = foldr1 (+) $ map (^2) x
+    makevar p = map (var . (p ++) . show) [1..8]
+    sumsq x = sum $ map (^2) x
