@@ -59,30 +59,31 @@ instance Ord Term where
     Term _ s1 `compare` Term _ s2 = s1 `compare` s2
 
 -- Stuff about showing!
+
+-- Safe fold function for empty array of arrays
+folds :: ([a] -> [a] -> [a]) -> [[a]] -> [a]
+folds sep [] = []
+folds sep arr = foldr1 sep arr
+
 instance Show Sym where
     show (Sym str) = str
 
 instance Show SymList where
-    show (SymList ls) = showSym ls where 
-        showSym [] = "" 
-        showSym [x] = show(x)
-        showSym (x:xs) = show(x) ++ "." ++ showSym(xs)
+    show (SymList ls) = folds mergeSym $ map show ls where 
+        mergeSym x y = x ++ "." ++ y
 
 instance Show Term where
-    show (Term c ls) = showTerm c ls where
-        showTerm c (SymList []) = show(c)
-        showTerm 1 ls = show(ls)
-        showTerm (-1) ls = "-" ++ show(ls)
-        showTerm c ls = show(c) ++ " " ++ show(ls)
+    show (Term c ls) = showTerm c $ show ls where
+        showTerm c "" = show(c)
+        showTerm 1 ls = ls
+        showTerm (-1) ls = "-" ++ ls
+        showTerm c ls = show(c) ++ "." ++ ls
 
 instance Show Expr where
-    show (Expr t) = showExpr t where
-        showExpr [] = "0"
-        showExpr [x] = show(x)
-        showExpr (x:(Term c vs):xs)
-            | c > 0 = show(x) ++ "+" ++ showExpr((Term c vs):xs)
-            | c < 0 = show(x) ++ showExpr((Term c vs):xs)
-            | otherwise = showExpr (x:xs)
+    show (Expr []) = "0"
+    show (Expr t) = folds mergeTerm $ map show t where
+        mergeTerm t1 ('-':t2) = t1 ++ "-" ++ t2
+        mergeTerm t1 t2 = t1 ++ "+" ++ t2
 
 -- Tests
 testShow = e where 
@@ -190,5 +191,5 @@ testDegen = ver where
     -- Must return 0 for verification success
     ver = sa * sb - sc 
 
-    makevar p = map var (map (p++) (map show [1..8])) 
-    sumsq x = foldr1 (+) (map (^2) x)
+    makevar p = map var $ map (p++) $ map show [1..8]
+    sumsq x = foldr1 (+) $ map (^2) x
