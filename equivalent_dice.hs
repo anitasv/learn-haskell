@@ -29,6 +29,6 @@ main = print (actual_freq three == expected_freq two) where
     -- Actual frequency during the simulation
     actual_freq = map (mult_freq (length two)) . frequency . (map equiv)
     
-    frequency list = map (\l -> (length l, head l)) (group (sort list))
+    frequency = map (\l -> (length l, head l)) . group . sort
     
     mult_freq m (freq, x) = (m * freq, x)
