@@ -5,7 +5,7 @@ import Data.List as List
 -- Solution to problem: https://www.youtube.com/watch?v=xHh0ui5mi_E
 
 equiv [x, y, z] 
-    | (x == y) && (y==z) = [6, 6]
+    | (x == y) && (y == z) = [6, 6]
     | (x == y) = [y, z]
     | (y == z) = [x, y]
     | (x == y - 1) && (y + 1 == z) = [y, y]
