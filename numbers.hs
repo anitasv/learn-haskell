@@ -19,11 +19,6 @@ instance Show Field where
 data Field = Field Integer Integer
 type FieldMonad = Either FieldError
 
--- instance Monad FieldMonad where 
---     return x = Right x 
---     (Left x) >>= f = (Left x) 
---     (Right x) >>= f = (f x)
-
 throwError = Left
 
 pmod a b | r >= 0 = r
@@ -59,6 +54,10 @@ inverseField m1 = do
     (Field p1 a1) <- m1
     pow m1 (p1 - 2)
 
+divField m1 m2 = m1 * (inverseField m2)
+
+val x y = return $ Field x y
+
 instance Num (FieldMonad Field) where
     (+) = addField
 
@@ -70,8 +69,9 @@ instance Num (FieldMonad Field) where
 
     signum _ = 1
 
-    fromInteger x = return $ Field 0 x
+    fromInteger x = val 0 x
 
-main = print (inverseField m1) where
-    m1 = return $ Field 17 2
+main = print (divField m1 m2) where
+    m1 = val 17 3
+    m2 = val 17 2
 
