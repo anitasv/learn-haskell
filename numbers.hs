@@ -15,19 +15,16 @@ instance Show Field where
 
 -- Field 17 3 == 3 (mod 17)
 data Field = Field Integer Integer
-data Eith a b = ELeft a | ERight b
-type FieldMonad = Eith FieldError
+type FieldMonad = Either FieldError
 
-instance Show (FieldMonad Field) where
-    show (ELeft e) = "Error: " ++ (show e)
-    show (ERight v) = "Value: " ++ (show v)
 
-instance Monad FieldMonad where 
-    return x = ERight x 
-    (ELeft x) >>= f = (ELeft x) 
-    (ERight x) >>= f = (f x)
 
-throwError = ELeft
+-- instance Monad FieldMonad where 
+--     return x = Right x 
+--     (Left x) >>= f = (Left x) 
+--     (Right x) >>= f = (f x)
+
+throwError = Left
 
 pmod a b | r >= 0 = r
          | otherwise = (r + b)
@@ -51,7 +48,7 @@ negateField m1 = do
     (Field p1 a1) <- m1
     return $ Field p1 $ (p1-a1) `pmod` p1
 
-val x y = ERight $ Field x y
+val x y = Right $ Field x y
 
 val17 = val 17
 
