@@ -55,11 +55,7 @@ negateField m1 = do
 
 inverseField m1 = do
     (Field p1 a1) <- m1
-    (pow m1 (p1 - 2)) 
-
-val x y = Right $ Field x y
-
-val17 = val 17
+    pow m1 (p1 - 2)
 
 instance Num (FieldMonad Field) where
     (+) = addField
@@ -72,8 +68,8 @@ instance Num (FieldMonad Field) where
 
     signum x = 1
 
-    fromInteger = val 0
+    fromInteger = return 0
 
 main = print (inverseField m1) where
-    m1 = val17 2
+    m1 = return 17 2
 
