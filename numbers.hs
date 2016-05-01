@@ -2,8 +2,10 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Main where
+import Debug.Trace
 
 data FieldError = DivByZero -- Divided by zero.
+    | DivInNat -- Division in natural space.
     | IncompatibleBase 
 
 instance Show FieldError where
@@ -66,7 +68,7 @@ instance Num (FieldMonad Field) where
 
     abs x = x
 
-    signum x = 1
+    signum _ = 1
 
     fromInteger = return 0
 
