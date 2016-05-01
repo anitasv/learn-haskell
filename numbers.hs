@@ -70,8 +70,8 @@ instance Num (FieldMonad Field) where
 
     signum _ = 1
 
-    fromInteger = return 0
+    fromInteger x = return $ Field 0 x
 
 main = print (inverseField m1) where
-    m1 = return 17 2
+    m1 = return $ Field 17 2
 
