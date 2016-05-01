@@ -28,6 +28,12 @@ pmod a b | r >= 0 = r
          | otherwise = r + b
   where r = a `mod` b
 
+pow :: FieldMonad Field -> Integer -> FieldMonad Field
+pow x 0 = x >>= \(Field p x) -> return (Field p 1)
+pow x y = if y `mod` 2 == 1
+          then x * z
+          else z where
+    z = pow (x * x) (y `div` 2)
 
 addField m1 m2 = do
     (Field p1 a1) <- m1
@@ -49,7 +55,7 @@ negateField m1 = do
 
 val x y = Right $ Field x y
 
-val17 = val 17
+val17 = pure 17
 
 instance Num (FieldMonad Field) where
     (+) = addField
@@ -64,6 +70,6 @@ instance Num (FieldMonad Field) where
 
     fromInteger = val 0
 
-main = print (addField m1 m2) where
-    m1 = val17 3
-    m2 = val17 15 
+main = print (pow m1 5) where
+    m1 = val17 2
+
