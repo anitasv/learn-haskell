@@ -11,13 +11,11 @@ instance Show FieldError where
     show IncompatibleBase = "Can't add with incompabile bases"
 
 instance Show Field where
-    show (Field x y) = (show y) ++ " (mod " ++ (show x) ++ ")"
+    show (Field x y) = show y ++ " (mod " ++ show x ++ ")"
 
 -- Field 17 3 == 3 (mod 17)
 data Field = Field Integer Integer
 type FieldMonad = Either FieldError
-
-
 
 -- instance Monad FieldMonad where 
 --     return x = Right x 
@@ -27,20 +25,21 @@ type FieldMonad = Either FieldError
 throwError = Left
 
 pmod a b | r >= 0 = r
-         | otherwise = (r + b)
+         | otherwise = r + b
   where r = a `mod` b
+
 
 addField m1 m2 = do
     (Field p1 a1) <- m1
     (Field p2 a2) <- m2
-    if (p1 == p2)
+    if p1 == p2
     then return $ Field p1 $ (a1 + a2) `pmod` p1
     else throwError IncompatibleBase
 
 multField m1 m2 = do
     (Field p1 a1) <- m1
     (Field p2 a2) <- m2
-    if (p1 == p2)
+    if p1 == p2
     then return $ Field p1 $ (a1 * a2) `pmod` p1
     else throwError IncompatibleBase
 
@@ -57,13 +56,13 @@ instance Num (FieldMonad Field) where
 
     (*) = multField
     
-    negate m = negateField m
+    negate = negateField
 
     abs x = x
 
     signum x = 1
 
-    fromInteger x = val 0 x
+    fromInteger = val 0
 
 main = print (addField m1 m2) where
     m1 = val17 3
