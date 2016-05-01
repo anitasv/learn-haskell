@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -6,7 +7,7 @@ import Debug.Trace
 
 data FieldError = DivByZero -- Divided by zero.
     | DivInNat -- Division in natural space.
-    | IncompatibleBase 
+    | IncompatibleBase
 
 instance Show FieldError where
     show DivByZero = "Divided by a multiple of base"
@@ -19,19 +20,22 @@ instance Show Field where
 data Field = Field Integer Integer
 type FieldMonad = Either FieldError
 
+throwError :: forall a b. a -> Either a b
 throwError = Left
 
+pmod :: Integral a => a -> a -> a
 pmod a b | r >= 0 = r
          | otherwise = r + b
   where r = a `mod` b
 
 pow :: FieldMonad Field -> Integer -> FieldMonad Field
-pow x 0 = x >>= \(Field p x) -> return (Field p 1)
+pow x 0 = x >>= \(Field p _x) -> return (Field p 1)
 pow x y = if y `mod` 2 == 1
           then x * z
           else z where
     z = pow (x * x) (y `div` 2)
 
+addField :: FieldMonad Field -> FieldMonad Field -> FieldMonad Field
 addField m1 m2 = do
     (Field p1 a1) <- m1
     (Field p2 a2) <- m2
@@ -39,6 +43,7 @@ addField m1 m2 = do
     then return $ Field p1 $ (a1 + a2) `pmod` p1
     else throwError IncompatibleBase
 
+multField :: FieldMonad Field -> FieldMonad Field -> FieldMonad Field
 multField m1 m2 = do
     (Field p1 a1) <- m1
     (Field p2 a2) <- m2
@@ -46,12 +51,14 @@ multField m1 m2 = do
     then return $ Field p1 $ (a1 * a2) `pmod` p1
     else throwError IncompatibleBase
 
+negateField :: FieldMonad Field -> FieldMonad Field
 negateField m1 = do
     (Field p1 a1) <- m1
     return $ Field p1 $ (p1-a1) `pmod` p1
 
+inverseField :: FieldMonad Field -> FieldMonad Field
 inverseField m1 = do
-    (Field p1 a1) <- m1
+    (Field p1 _a1) <- m1
     pow m1 (p1 - 2)
 
 divField m1 m2 = m1 * (inverseField m2)
@@ -60,18 +67,12 @@ val x y = return $ Field x y
 
 instance Num (FieldMonad Field) where
     (+) = addField
-
     (*) = multField
-    
     negate = negateField
-
     abs x = x
-
     signum _ = 1
-
     fromInteger x = val 0 x
 
 main = print (divField m1 m2) where
     m1 = val 17 3
     m2 = val 17 2
-
